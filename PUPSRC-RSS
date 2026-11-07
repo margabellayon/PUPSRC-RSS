@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PUP Santa Rosa Room Reservation System</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pupMaroon: '#7A0000',
+                        pupDarkMaroon: '#5A0000',
+                        pupGold: '#FFB800',
+                        pupLightGold: '#FFF3D1',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+    body {
+        font-family: 'Inter', sans-serif;
+
+        /* MAIN BACKGROUND IMAGE */
+        background-image: url('https://i.redd.it/17dvvlu5pogc1.jpg');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    }
+
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: #7A0000; border-radius: 4px; }
+</style>
+</head>
+<body class="text-gray-800 antialiased min-h-screen flex flex-col">
+
+    <!-- Notification Toast Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Top Banner -->
+    <div class="bg-pupDarkMaroon text-pupLightGold text-xs py-2 px-4 text-center font-medium flex items-center justify-center gap-2 shadow-inner">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span>GEED 028 Reading Visual Arts — PUP Santa Rosa Room Reservation System</span>
+    </div>
+
+    <!-- Navigation Header -->
+    <header class="bg-pupMaroon text-white sticky top-0 z-40 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <!-- Branding -->
+            <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('rooms')">
+                <div class="w-12 h-12 bg-pupGold text-pupMaroon rounded-xl flex items-center justify-center font-bold text-xl shadow-lg transform hover:scale-105 transition">
+                    <i class="fa-solid fa-door-open"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-base sm:text-lg tracking-tight leading-tight">PUP Santa Rosa</h1>
+                    <p class="text-xs text-pupGold font-semibold uppercase tracking-wider">Rooms Reservation System</p>
+                </div>
+            </div>
+
+            <!-- Desktop Nav Links -->
+            <nav class="hidden md:flex items-center gap-1 lg:gap-2">
+                <button onclick="switchTab('rooms')" id="nav-rooms" class="nav-btn px-4 py-2 rounded-lg font-medium text-sm transition bg-white/20 text-white">Browse Rooms</button>
+                <button onclick="switchTab('bookings')" id="nav-bookings" class="nav-btn px-4 py-2 rounded-lg font-medium text-sm transition hover:bg-white/10 text-pupLightGold">My Bookings <span id="badge-count" class="ml-1 bg-pupGold text-pupMaroon text-xs px-1.5 py-0.5 rounded-full font-bold">2</span></button>
+                <button onclick="checkAdminAccess()" id="nav-admin" class="nav-btn px-4 py-2 rounded-lg font-medium text-sm transition hover:bg-white/10 text-pupLightGold flex items-center gap-1.5"><i class="fa-solid fa-shield-halved text-pupGold"></i> Admin Dashboard</button>
+                <button onclick="switchTab('rationale')" id="nav-rationale" class="nav-btn px-4 py-2 rounded-lg font-medium text-sm transition hover:bg-white/10 text-pupLightGold flex items-center gap-1.5"><i class="fa-solid fa-palette text-pupGold"></i> Rationale</button>
+            </nav>
+
+            <!-- User Profile & Mobile Menu Toggle -->
+            <div class="flex items-center gap-3">
+                <!-- Replace your current user-pill div in the header with this -->
+                <div id="auth-controls" class="flex items-center gap-2">
+                    <div id="guest-buttons" class="flex items-center gap-2">
+                        <button onclick="openModal('student-login-modal')" class="bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition">Student Login</button>
+                        <button onclick="openModal('signup-modal')" class="bg-pupGold text-pupMaroon hover:bg-amber-400 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow">Sign Up</button>
+                    </div>
+                    <div id="user-pill" class="hidden items-center gap-2 bg-black/20 py-1.5 px-3 rounded-full border border-pupGold/30">
+                        <div class="w-8 h-8 rounded-full bg-pupGold text-pupMaroon flex items-center justify-center font-bold text-sm" id="user-initials">JS</div>
+                        <div class="text-xs text-left">
+                            <p class="font-bold text-white" id="user-display-name">Juan dela Cruz</p>
+                            <p class="text-pupGold" id="user-role-label">BSIT 3-1 (Student)</p>
+                        </div>
+                        <button onclick="logoutStudent()" class="ml-2 text-pupLightGold hover:text-white text-xs" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></button>
+                    </div>
+                </div>
+
+        <!-- Mobile Navigation Drawer -->
+        <div id="mobile-menu" class="hidden md:hidden bg-pupDarkMaroon border-t border-white/10 px-4 pt-3 pb-5 flex flex-col gap-2">
+            <button onclick="switchTab('rooms'); toggleMobileMenu();" class="text-left px-3 py-2 rounded-lg font-medium text-sm hover:bg-white/10 text-white">Browse Rooms (101-412)</button>
+            <button onclick="switchTab('bookings'); toggleMobileMenu();" class="text-left px-3 py-2 rounded-lg font-medium text-sm hover:bg-white/10 text-pupLightGold">My Bookings</button>
+            <button onclick="checkAdminAccess(); toggleMobileMenu();" class="text-left px-3 py-2 rounded-lg font-medium text-sm hover:bg-white/10 text-pupLightGold flex items-center gap-2"><i class="fa-solid fa-shield-halved text-pupGold"></i> Admin Dashboard</button>
+            <button onclick="switchTab('rationale'); toggleMobileMenu();" class="text-left px-3 py-2 rounded-lg font-medium text-sm hover:bg-white/10 text-pupLightGold flex items-center gap-2"><i class="fa-solid fa-palette text-pupGold"></i> Design Rationale</button>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- ================= TAB 1: BROWSE ROOMS (101-412) ================= -->
+        <div id="tab-rooms" class="tab-content space-y-8">
+            <!-- Hero Header -->
+            <div class="relative bg-gradient-to-r from-pupMaroon via-[#9E0000] to-pupDarkMaroon rounded-3xl p-8 sm:p-10 text-white shadow-xl overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 w-96 h-96 bg-pupGold/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="relative z-10 max-w-2xl space-y-4">
+                    <span class="inline-flex items-center gap-2 bg-pupGold text-pupMaroon px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow">
+                        <i class="fa-solid fa-building-columns"></i> Rooms Reservation System
+                    </span>
+                    <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight leading-tight">
+                        Campus Room Reservation System
+                    </h2>
+                    <p class="text-pupLightGold text-sm sm:text-base font-normal leading-relaxed">
+                        Reserve lecture halls, laboratories, and other rooms from Room 101 up to Room 412. Check real-time status and request slots instantly.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Filter and Search Bar -->
+            <div class="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="relative w-full sm:w-96">
+                    <i class="fa-solid fa-search absolute left-4 top-3.5 text-gray-400"></i>
+                    <input type="text" id="room-search" oninput="filterRooms()" placeholder="Search room number (e.g., 112, 201, 305)..." class="w-full pl-11 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-pupMaroon outline-none bg-gray-50">
+                </div>
+                <div class="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+                    <button onclick="filterFloor('all')" id="filter-all" class="floor-btn px-4 py-2 rounded-xl text-xs font-bold bg-pupMaroon text-white transition shadow-sm">All Floors</button>
+                    <button onclick="filterFloor('1')" id="filter-1" class="floor-btn px-4 py-2 rounded-xl text-xs font-bold bg-gray-100 text-gray-700 hover:bg-gray-200 transition">1st Floor</button>
+                    <button onclick="filterFloor('2')" id="filter-2" class="floor-btn px-4 py-2 rounded-xl text-xs font-bold bg-gray-100 text-gray-700 hover:bg-gray-200 transition">2nd Floor</button>
+                    <button onclick="filterFloor('3')" id="filter-3" class="floor-btn px-4 py-2 rounded-xl text-xs font-bold bg-gray-100 text-gray-700 hover:bg-gray-200 transition">3rd Floor</button>
+                    <button onclick="filterFloor('4')" id="filter-4" class="floor-btn px-4 py-2 rounded-xl text-xs font-bold bg-gray-100 text-gray-700 hover:bg-gray-200 transition">4th Floor</button>
+                </div>
+            </div>
+
+            <!-- Rooms Grid -->
+            <div id="rooms-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Dynamically generated via JS -->
+            </div>
+        </div>
+
+        <!-- ================= TAB 2: MY BOOKINGS ================= -->
+        <div id="tab-bookings" class="tab-content hidden space-y-6">
+            <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-8">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-6 mb-6">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-pupMaroon bg-pupLightGold px-3 py-1 rounded-full">User Dashboard</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-2">My Reservations</h2>
+                        <p class="text-sm text-gray-500">Track your room reservation status (Pending approval by Admin).</p>
+                    </div>
+                    <button onclick="switchTab('rooms')" class="bg-pupMaroon text-white hover:bg-pupDarkMaroon px-5 py-2.5 rounded-xl font-bold text-sm shadow transition flex items-center gap-2 self-start">
+                        <i class="fa-solid fa-plus"></i> Reserve New Room
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-gray-200 text-xs font-bold text-gray-500 uppercase bg-gray-50">
+                                <th class="py-4 px-4 rounded-l-xl">Ref ID</th>
+                                <th class="py-4 px-4">Room No. & Name</th>
+                                <th class="py-4 px-4">Date & Time Slot</th>
+                                <th class="py-4 px-4">Purpose / Subject</th>
+                                <th class="py-4 px-4">Status</th>
+                                <th class="py-4 px-4 rounded-r-xl text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bookings-table-body" class="divide-y divide-gray-100 text-sm">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 3: ADMIN DASHBOARD ================= -->
+        <div id="tab-admin" class="tab-content hidden space-y-6">
+            <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-8 space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-6">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-pupMaroon bg-pupLightGold px-3 py-1 rounded-full">Admin Portal</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-2">Room Reservation Approvals</h2>
+                        <p class="text-sm text-gray-500">Manage, approve, or reject student requests for rooms in Polytechnic University of the Philippines - Santa Rosa Campus.</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button onclick="adminLogout()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2.5 rounded-xl font-bold text-xs transition flex items-center gap-2">
+                            <i class="fa-solid fa-right-from-bracket"></i> Logout Admin
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Admin Stats Bar -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center gap-4">
+                        <div class="w-12 h-12 bg-amber-500 text-white rounded-xl flex items-center justify-center text-xl font-bold">
+                            <i class="fa-solid fa-clock"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-amber-700 font-semibold">Pending Requests</p>
+                            <h3 class="text-2xl font-extrabold text-amber-900" id="admin-pending-count">0</h3>
+                        </div>
+                    </div>
+                    <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-center gap-4">
+                        <div class="w-12 h-12 bg-emerald-500 text-white rounded-xl flex items-center justify-center text-xl font-bold">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-emerald-700 font-semibold">Approved Bookings</p>
+                            <h3 class="text-2xl font-extrabold text-emerald-900" id="admin-approved-count">0</h3>
+                        </div>
+                    </div>
+                    <div class="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex items-center gap-4">
+                        <div class="w-12 h-12 bg-blue-500 text-white rounded-xl flex items-center justify-center text-xl font-bold">
+                            <i class="fa-solid fa-door-open"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-blue-700 font-semibold">Total Tracked Rooms</p>
+                            <h3 class="text-2xl font-extrabold text-blue-900">Rooms 101 - 412</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Requests Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-gray-200 text-xs font-bold text-gray-500 uppercase bg-gray-50">
+                                <th class="py-4 px-4 rounded-l-xl">Ref ID</th>
+                                <th class="py-4 px-4">Requester</th>
+                                <th class="py-4 px-4">Room No.</th>
+                                <th class="py-4 px-4">Date & Time</th>
+                                <th class="py-4 px-4">Purpose</th>
+                                <th class="py-4 px-4">Status</th>
+                                <th class="py-4 px-4 rounded-r-xl text-center">Approval Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-table-body" class="divide-y divide-gray-100 text-sm">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 4: RATIONALE ================= -->
+        <div id="tab-rationale" class="tab-content hidden space-y-6">
+            <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-10 max-w-4xl mx-auto space-y-8">
+                <div class="border-b border-gray-100 pb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-pupMaroon bg-pupLightGold px-3 py-1 rounded-full">GEED 028 • Reading Visual Arts</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-2">Design Rationale</h2>
+                        <p class="text-sm text-gray-500">Individual Project for Reading Visual Arts</p>
+                    </div>
+                    <div class="bg-pupLightGold text-pupMaroon px-4 py-2 rounded-xl text-center font-extrabold text-lg shadow-inner">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-gray-50 p-5 rounded-2xl border border-gray-200">
+                    <div>
+                        <p class="text-xs text-gray-500 font-semibold uppercase">Project Title</p>
+                        <p class="text-sm font-bold text-gray-900">PUP Santa Rosa Room Reservation System</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 font-semibold uppercase">Target Audience</p>
+                        <p class="text-sm font-bold text-gray-900">PUPSRC Students & Campus Administrators</p>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <h3 class="font-bold text-lg text-gray-900 flex items-center gap-2">
+                        <i class="fa-solid fa-pen-nib text-pupMaroon"></i> 150-Word Design Rationale
+                    </h3>
+                    <div class="bg-pupLightGold/40 border-l-4 border-pupMaroon p-6 rounded-r-2xl text-sm leading-relaxed text-gray-800 space-y-3">
+                        <p>
+                            The <strong>PUP Santa Rosa Room Reservation System</strong> is designed to make room booking easier and more organized for students and administrators. The maroon and gold color scheme represents PUP and helps connect the website to the school's identity.
+                        </p>
+                        <p>
+                            A simple layout with clear labels, buttons, and room cards allows users to navigate the system without confusion. The room search and floor filters make it easier to find available rooms, while the booking page allows students to check their reservation status. Different colors are used for pending and approved requests so users can recognize each status quickly. The admin dashboard helps administrators manage and review reservation requests. 
+                        </p>
+                        <p>
+                            The responsive design allows the website to be viewed on both phones and computers. Overall, the design focuses on creating a clean, accessible, and convenient experience while maintaining a consistent appearance that reflects PUP's identity and supports the everyday needs of its users.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ================= RESERVATION MODAL ================= -->
+    <div id="reservation-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6 transform transition-all">
+            <div class="flex items-center justify-between border-b border-gray-100 pb-4">
+                <div>
+                    <span class="text-xs font-bold text-pupMaroon bg-pupLightGold px-2.5 py-1 rounded-full uppercase">Room Booking</span>
+                    <h3 id="modal-room-title" class="text-xl font-extrabold text-gray-900 mt-1">Reserve Room 112</h3>
+                </div>
+                <button onclick="closeReservationModal()" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 font-bold">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="reservation-form" onsubmit="handleReservationSubmit(event)" class="space-y-4">
+                <input type="hidden" id="modal-room-number">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Requester Name & ID</label>
+                    <input type="text" id="modal-name" value="Juan dela Cruz (BSIT 3-1)" required class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-pupMaroon outline-none bg-gray-50">
+                </div>
+
+               <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Reservation Date</label>
+                    <input
+                        type="date"
+                        id="modal-date"
+                        required
+                        class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-pupMaroon outline-none bg-white"
+                    >
+                </div>
+
+               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div>
+        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">
+            Start Time
+        </label>
+        <input
+            type="time"
+            id="modal-start-time"
+            min="07:30"
+            max="21:00"
+            value="07:30"
+            required
+            class="w-full px-4 py-2.5 rounded-xl border border-gray-200"
+        >
+    </div>
+
+    <div>
+        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">
+            End Time
+        </label>
+        <input
+            type="time"
+            id="modal-end-time"
+            min="07:30"
+            max="21:00"
+            value="09:00"
+            required
+            class="w-full px-4 py-2.5 rounded-xl border border-gray-200"
+        >
+    </div>
+</div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Purpose / Subject</label>
+                    <input type="text" id="modal-purpose" placeholder="e.g., Capstone Meeting, CC 106 Lab Practice" required class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-pupMaroon outline-none bg-white">
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
+                    <button type="button" onclick="closeReservationModal()" class="px-5 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-semibold text-xs hover:bg-gray-50">Cancel</button>
+                    <button type="submit" class="bg-pupMaroon hover:bg-pupDarkMaroon text-white px-6 py-2.5 rounded-xl font-bold text-xs shadow transition">Submit for Approval</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= ADMIN LOGIN MODAL ================= -->
+    <div id="admin-login-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 sm:p-8 shadow-2xl space-y-6">
+            <div class="flex items-center justify-between border-b border-gray-100 pb-4">
+                <div>
+                    <span class="text-xs font-bold text-pupMaroon bg-pupLightGold px-2.5 py-1 rounded-full uppercase">Security Access</span>
+                    <h3 class="text-xl font-extrabold text-gray-900 mt-1">Admin Login</h3>
+                </div>
+                <button onclick="closeAdminLoginModal()" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 font-bold">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <form onsubmit="handleAdminLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Admin Username</label>
+                    <input type="text" id="admin-user" value="admin_santarosa" required class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-pupMaroon outline-none bg-gray-50">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Password</label>
+                    <input type="password" id="admin-pass" value="pupadmin2026" required class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-pupMaroon outline-none bg-gray-50">
+                </div>
+                <button type="submit" class="w-full bg-pupMaroon hover:bg-pupDarkMaroon text-white font-bold py-3 rounded-xl shadow transition text-sm">Login as Administrator</button>
+            </form>
+        </div>
+    </div>
+<!-- ==<!-- ================= STUDENT SIGN-UP MODAL ================= -->
+<div id="signup-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 sm:p-8 shadow-2xl space-y-6">
+        <div class="flex items-center justify-between border-b border-gray-100 pb-4">
+            <div>
+                <span class="text-xs font-bold text-pupMaroon bg-pupLightGold px-2.5 py-1 rounded-full uppercase">PUP Portal</span>
+                <h3 class="text-xl font-extrabold text-gray-900 mt-1">Student Sign Up</h3>
+            </div>
+            <button onclick="closeModal('signup-modal')" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 font-bold">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <form onsubmit="handleStudentSignup(event)" class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Full Name</label>
+                <input type="text" id="signup-name" placeholder="e.g., Juan dela Cruz" required class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-pupMaroon outline-none bg-gray-50">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Student Section / Year</label>
+                <input type="text" id="signup-section" placeholder="e.g., BSIT 3-1" required class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-pupMaroon outline-none bg-gray-50">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Password</label>
+                <input type="password" id="signup-pass" placeholder="••••••••" required class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-pupMaroon outline-none bg-gray-50">
+            </div>
+            <button type="submit" class="w-full bg-pupMaroon hover:bg-pupDarkMaroon text-white font-bold py-3 rounded-xl shadow transition text-sm">Create Student Account</button>
+        </form>
+    </div>
+</div>
+
+<!-- ================= STUDENT LOGIN MODAL ================= -->
+<div id="student-login-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 sm:p-8 shadow-2xl space-y-6">
+        <div class="flex items-center justify-between border-b border-gray-100 pb-4">
+            <div>
+                <span class="text-xs font-bold text-pupMaroon bg-pupLightGold px-2.5 py-1 rounded-full uppercase">PUP Portal</span>
+                <h3 class="text-xl font-extrabold text-gray-900 mt-1">Student Login</h3>
+            </div>
+            <button onclick="closeModal('student-login-modal')" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 font-bold">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <form onsubmit="handleStudentLogin(event)" class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Full Name</label>
+                <input type="text" id="login-name" placeholder="e.g., Juan dela Cruz" required class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-pupMaroon outline-none bg-gray-50">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Password</label>
+                <input type="password" id="login-pass" placeholder="••••••••" required class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-pupMaroon outline-none bg-gray-50">
+            </div>
+            <button type="submit" class="w-full bg-pupMaroon hover:bg-pupDarkMaroon text-white font-bold py-3 rounded-xl shadow transition text-sm">Login to Account</button>
+            <p class="text-xs text-center text-gray-500 pt-2">
+                Don't have an account? <button type="button" onclick="switchToSignup()" class="text-pupMaroon font-bold hover:underline">Sign up here</button>
+            </p>
+        </form>
+    </div>
+</div>
+
+<!-- ================= STUDENT LOGIN MODAL ================= -->
+<div id="student-login-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 sm:p-8 shadow-2xl space-y-6">
+        <div class="flex items-center justify-between border-b border-gray-100 pb-4">
+            <div>
+                <span class="text-xs font-bold text-pupMaroon bg-pupLightGold px-2.5 py-1 rounded-full uppercase">PUP Portal</span>
+                <h3 class="text-xl font-extrabold text-gray-900 mt-1">Student Login</h3>
+            </div>
+            <button onclick="closeModal('student-login-modal')" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 font-bold">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <form onsubmit="handleStudentLogin(event)" class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">PUP Email</label>
+                <input type="email" id="login-email" placeholder="name@iskolarngbayan.pup.edu.ph" required class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-pupMaroon outline-none bg-gray-50">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Password</label>
+                <input type="password" id="login-pass" placeholder="••••••••" required class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-pupMaroon outline-none bg-gray-50">
+            </div>
+            <button type="submit" class="w-full bg-pupMaroon hover:bg-pupDarkMaroon text-white font-bold py-3 rounded-xl shadow transition text-sm">Login to Account</button>
+            <p class="text-xs text-center text-gray-500 pt-2">
+                Don't have an account? <button type="button" onclick="switchToSignup()" class="text-pupMaroon font-bold hover:underline">Sign up here</button>
+            </p>
+        </form>
+    </div>
+</div>
+
+    <!-- ================= FLOATING ADMIN CHAT SUPPORT WIDGET ================= -->
+    <div class="fixed bottom-5 right-5 z-40">
+        <!-- Chat Toggle Button -->
+        <button id="chat-toggle-btn" onclick="toggleChatWindow()" class="w-14 h-14 bg-pupMaroon hover:bg-pupDarkMaroon text-white rounded-full shadow-2xl flex items-center justify-center text-2xl transition transform hover:scale-105 relative">
+            <i class="fa-solid fa-headset"></i>
+            <span class="absolute -top-1 -right-1 w-5 h-5 bg-pupGold text-pupMaroon rounded-full text-xs font-extrabold flex items-center justify-center shadow">1</span>
+        </button>
+
+        <!-- Chat Window Box -->
+        <div id="chat-window" class="hidden absolute bottom-20 right-0 w-80 sm:w-96 bg-white rounded-3xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col h-[450px] transition-all">
+            <!-- Chat Header -->
+            <div class="bg-pupMaroon text-white p-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-pupGold text-pupMaroon rounded-full flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-sm">PUP Santa Rosa IT Admin</h4>
+                        <p class="text-xs text-pupLightGold flex items-center gap-1">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Online Support
+                        </p>
+                    </div>
+                </div>
+                <button onclick="toggleChatWindow()" class="text-white hover:text-pupGold text-lg font-bold">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Chat Messages Body -->
+            <div id="chat-messages" class="flex-grow p-4 overflow-y-auto space-y-3 bg-gray-50 text-sm">
+                <div class="flex items-start gap-2">
+                    <div class="w-8 h-8 rounded-full bg-pupMaroon text-pupGold flex items-center justify-center font-bold text-xs flex-shrink-0">AD</div>
+                    <div class="bg-white p-3 rounded-2xl shadow-sm border border-gray-100 max-w-[80%] text-gray-700">
+                        Hello! Welcome to the PUP Santa Rosa Room Reservation Support. How can our admin team assist you today?
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Input Footer -->
+            <div class="p-3 bg-white border-t border-gray-200 flex items-center gap-2">
+                <input type="text" id="chat-input" onkeypress="handleChatKey(event)" placeholder="Type your message ..." class="flex-grow px-4 py-2 rounded-xl border border-gray-200 text-xs focus:ring-2 focus:ring-pupMaroon outline-none bg-gray-50">
+                <button onclick="sendChatMessage()" class="bg-pupMaroon hover:bg-pupDarkMaroon text-white w-10 h-10 rounded-xl flex items-center justify-center transition shadow">
+                    <i class="fa-solid fa-paper-plane text-xs"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-pupDarkMaroon text-white mt-12 border-t border-white/10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left text-xs">
+            <div>
+                <p class="font-extrabold tracking-wide">PUP Santa Rosa Campus — Rooms Reservation System</p>
+                <p class="text-pupLightGold mt-1">GEED 028 Mid-Semester Reading Visual Arts Individual Project</p>
+            </div>
+            <div class="text-gray-300">
+                &copy; 2026 Margarette Ysabella A. Casuyon. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Generate Rooms 101 to 412 dynamically
+        let allRooms = [];
+        const roomTypes = [
+            { name: "Discussion Room", capacity: 45 },
+            { name: "Discussion Room", capacity: 40 },
+            { name: "Discussion Room", capacity: 25 },
+            { name: "Discussion Room", capacity: 30 }
+        ];
+
+        // Generate rooms from 101 up to 412
+        // Floors: 100s (101-112), 200s (201-212), 300s (301-312), 400s (401-412)
+        const roomNumbersList = [
+            101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112,
+            201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212,
+            301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312,
+            401, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412
+        ];
+
+        roomNumbersList.forEach((num, index) => {
+            const floor = Math.floor(num / 100);
+            const typeObj = roomTypes[index % roomTypes.length];
+            const statuses = ['Available', 'Available', 'Reserved', 'Available'];
+            allRooms.push({
+                number: num,
+                floor: floor.toString(),
+                name: `Room ${num} - ${typeObj.name}`,
+                capacity: typeObj.capacity,
+                status: statuses[index % statuses.length],
+                description: `Equipped with a television, and whiteboard.`
+            });
+        });
+
+        // Reservations state
+        let reservations = [
+            {
+                id: 'PUP-SR-9102',
+                roomNum: 112,
+                roomName: 'Room 112 - Discussion Room',
+                requester: 'Barry Allen (BSIT 3-1)',
+                date: '2026-11-10',
+                time: '01:00 PM - 03:00 PM',
+                purpose: 'Class Discussion on Programming 3',
+                status: 'Approved'
+            },
+            {
+                id: 'PUP-SR-4318',
+                roomNum: 205,
+                roomName: 'Room 205 - Discussion Room',
+                requester: 'Maria Santos (BSIT 3-2)',
+                date: '2026-11-12',
+                time: '10:00 AM - 12:00 PM',
+                purpose: 'RVA Midterm Examination',
+                status: 'Pending'
+            }
+        ];
+
+        let isAdminLoggedIn = false;
+
+        // Render Rooms Grid
+        function renderRooms(roomsToRender = allRooms) {
+            const grid = document.getElementById('rooms-grid');
+            grid.innerHTML = '';
+
+            if (roomsToRender.length === 0) {
+                grid.innerHTML = `<div class="col-span-full py-12 text-center text-gray-400">No rooms found matching your search.</div>`;
+                return;
+            }
+
+            roomsToRender.forEach(r => {
+                const isAvail = r.status === 'Available';
+                const badgeColor = isAvail ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white';
+
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition flex flex-col justify-between';
+                card.innerHTML = `
+                    <div class="h-40 bg-gradient-to-br from-pupMaroon to-pupDarkMaroon p-5 text-white relative flex flex-col justify-between">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold uppercase tracking-wider bg-black/30 px-2.5 py-1 rounded-lg backdrop-blur">Floor ${r.floor}</span>
+                            <span class="text-xs font-bold px-3 py-1 rounded-full shadow ${badgeColor}">${r.status}</span>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-extrabold tracking-tight">Room ${r.number}</h3>
+                            <p class="text-xs text-pupLightGold font-medium">${r.name.split(' - ')[1]}</p>
+                        </div>
+                    </div>
+                    <div class="p-5 space-y-4 flex-grow flex flex-col justify-between">
+                        <div class="space-y-2">
+                            <p class="text-xs text-gray-600 line-clamp-2">${r.description}</p>
+                            <div class="flex items-center gap-3 text-xs text-gray-500 pt-2 border-t border-gray-100">
+                                <span><i class="fa-solid fa-users text-pupMaroon mr-1"></i> ${r.capacity} Seats</span>
+                                <span><i class="fa-solid fa-tv text-pupMaroon mr-1"></i> Television</span>
+                            </div>
+                        </div>
+                        <button type="button" onclick="openReservationModal(${r.number})" class="w-full bg-pupMaroon hover:bg-pupDarkMaroon text-white font-bold text-xs py-2.5 rounded-xl transition shadow">
+                            Reserve Room ${r.number}
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Filter Rooms by Search Input
+        function filterRooms() {
+            const query = document.getElementById('room-search').value.toLowerCase();
+            const filtered = allRooms.filter(r => r.number.toString().includes(query) || r.name.toLowerCase().includes(query));
+            renderRooms(filtered);
+        }
+
+        // Filter Rooms by Floor
+        function filterFloor(floorNum) {
+            // Update button styles
+            document.querySelectorAll('.floor-btn').forEach(btn => {
+                btn.className = 'floor-btn px-4 py-2 rounded-xl text-xs font-bold bg-gray-100 text-gray-700 hover:bg-gray-200 transition';
+            });
+            document.getElementById('filter-' + floorNum).className = 'floor-btn px-4 py-2 rounded-xl text-xs font-bold bg-pupMaroon text-white transition shadow-sm';
+
+            if (floorNum === 'all') {
+                renderRooms(allRooms);
+            } else {
+                const filtered = allRooms.filter(r => r.floor === floorNum);
+                renderRooms(filtered);
+            }
+        }
+
+        // Tab Switcher
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+            const target = document.getElementById('tab-' + tabId);
+            if (target) {
+                target.classList.remove('hidden');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-white/20', 'text-white');
+                btn.classList.add('text-pupLightGold');
+            });
+        }
+
+        // Toast Notification System (No alerts)
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-emerald-600' : 'bg-pupMaroon';
+            toast.className = `${bgColor} text-white px-5 py-3 rounded-xl shadow-lg flex items-center gap-3 text-sm font-semibold pointer-events-auto transform translate-y-2 opacity-0 transition-all duration-300`;
+            toast.innerHTML = `<i class="fa-solid fa-circle-check text-lg"></i> <span>${message}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 50);
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        // Modal Controls
+        function openReservationModal(roomNum) {
+            document.getElementById('modal-room-number').value = roomNum;
+            document.getElementById('modal-room-title').innerText = `Reserve Room ${roomNum}`;
+            
+            // Set default date to tomorrow
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('modal-date').value = tomorrow.toISOString().split('T')[0];
+
+            document.getElementById('reservation-modal').classList.remove('hidden');
+        }
+
+        function closeReservationModal() {
+            document.getElementById('reservation-modal').classList.add('hidden');
+        }
+
+        // Handle Reservation Submit
+        function handleReservationSubmit(e) {
+    e.preventDefault();
+
+    if (!currentUser) {
+        showToast('Please log in first to reserve a room.', 'error');
+        openModal('student-login-modal');
+        return;
+    }
+
+    const roomNum = document.getElementById('modal-room-number').value;
+    const date = document.getElementById('modal-date').value;
+    const startTime = document.getElementById('modal-start-time').value;
+    const endTime = document.getElementById('modal-end-time').value;
+    const purpose = document.getElementById('modal-purpose').value;
+
+    // Validate required fields
+    if (!date || !startTime || !endTime || !purpose.trim()) {
+        showToast('Please complete all reservation details.', 'error');
+        return;
+    }
+
+    // Allowed reservation hours: 7:30 AM to 9:00 PM
+    if (startTime < '07:30' || startTime >= '21:00' ||
+        endTime <= '07:30' || endTime > '21:00') {
+        showToast('Reservations must be between 7:30 AM and 9:00 PM.', 'error');
+        return;
+    }
+
+    if (endTime <= startTime) {
+        showToast('End time must be later than start time.', 'error');
+        return;
+    }
+
+    function formatTime(time) {
+        const [hours, minutes] = time.split(':').map(Number);
+        const suffix = hours >= 12 ? 'PM' : 'AM';
+        const displayHour = hours % 12 || 12;
+        return `${String(displayHour).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${suffix}`;
+    }
+
+    const time = `${formatTime(startTime)} - ${formatTime(endTime)}`;
+
+    const newBooking = {
+        id: 'PUP-SR-' + Math.floor(1000 + Math.random() * 9000),
+        roomNum: parseInt(roomNum),
+        roomName: `Room ${roomNum}`,
+        requester: `${currentUser.name} (${currentUser.section})`,
+        email: currentUser.email,
+        date: date,
+        time: time,
+        purpose: purpose,
+        status: 'Pending'
+    };
+
+    reservations.unshift(newBooking);
+    renderBookings();
+    updateBadgeCount();
+    closeReservationModal();
+
+    showToast(`Room ${roomNum} reservation submitted successfully!`, 'success');
+    switchTab('bookings');
+}
+
+
+        // Cancel Booking
+        function cancelBooking(id) {
+            reservations = reservations.filter(b => b.id !== id);
+            renderBookings();
+            updateBadgeCount();
+            showToast('Reservation cancelled successfully.', 'info');
+        }
+
+        // Render My Bookings
+        function renderBookings() {
+            const tbody = document.getElementById('bookings-table-body');
+            tbody.innerHTML = '';
+
+            if (reservations.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-gray-400">No active bookings found.</td></tr>`;
+                return;
+            }
+
+            reservations.forEach(b => {
+                const statusBadge = b.status === 'Approved'
+                    ? '<span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full">Approved</span>'
+                    : '<span class="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full">Pending Approval</span>';
+
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition';
+                row.innerHTML = `
+                    <td class="py-4 px-4 font-mono font-bold text-pupMaroon">${b.id}</td>
+                    <td class="py-4 px-4 font-semibold text-gray-900">${b.roomName}</td>
+                    <td class="py-4 px-4 text-xs text-gray-600"><span class="font-bold">${b.date}</span><br>${b.time}</td>
+                    <td class="py-4 px-4 text-gray-600">${b.purpose}</td>
+                    <td class="py-4 px-4">${statusBadge}</td>
+                    <td class="py-4 px-4 text-center">
+                        <button onclick="cancelBooking('${b.id}')" class="text-red-600 hover:text-red-800 text-xs font-bold bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition">Cancel</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updateBadgeCount() {
+            document.getElementById('badge-count').innerText = reservations.length;
+        }
+
+        // Admin Access Check
+        function checkAdminAccess() {
+            if (isAdminLoggedIn) {
+                switchTab('admin');
+                renderAdminTable();
+            } else {
+                document.getElementById('admin-login-modal').classList.remove('hidden');
+            }
+        }
+
+        function closeAdminLoginModal() {
+            document.getElementById('admin-login-modal').classList.add('hidden');
+        }
+
+        function handleAdminLogin(e) {
+            e.preventDefault();
+            const user = document.getElementById('admin-user').value;
+            const pass = document.getElementById('admin-pass').value;
+
+            if (user === 'admin_santarosa' && pass === 'pupadmin2026') {
+                isAdminLoggedIn = true;
+                closeAdminLoginModal();
+                showToast('Admin login successful!', 'success');
+                switchTab('admin');
+                renderAdminTable();
+                
+                // Update header pill
+                document.getElementById('user-display-name').innerText = 'System Admin';
+                document.getElementById('user-role-label').innerText = 'IT Administrator';
+                document.getElementById('user-initials').innerText = 'AD';
+                document.getElementById('chat-header-title').innerText = 'Live Student Chat Support';
+                document.getElementById('chat-header-status').innerText = 'Logged in as Admin (Replying Mode)';
+                document.getElementById('chat-input').placeholder = 'Type reply as Admin...';
+            } else {
+                showToast('Invalid admin credentials. Use admin_santarosa / pupadmin2026', 'error');
+            }
+        }
+
+        function adminLogout() {
+            isAdminLoggedIn = false;
+            showToast('Logged out from admin portal.', 'info');
+            switchTab('rooms');
+            document.getElementById('user-display-name').innerText = 'Juan dela Cruz';
+            document.getElementById('user-role-label').innerText = 'BSIT 3-1 (Student)';
+            document.getElementById('user-initials').innerText = 'JS';
+            document.getElementById('chat-header-title').innerText = 'PUP Santa Rosa IT Admin';
+            document.getElementById('chat-header-status').innerText = 'Online Support';
+            document.getElementById('chat-input').placeholder = 'Type your message ...';
+        }
+
+        // Render Admin Approval Table
+        function renderAdminTable() {
+            const tbody = document.getElementById('admin-table-body');
+            tbody.innerHTML = '';
+
+            let pendingCount = 0;
+            let approvedCount = 0;
+
+            reservations.forEach(b => {
+                if (b.status === 'Pending') pendingCount++;
+                if (b.status === 'Approved') approvedCount++;
+
+                const statusBadge = b.status === 'Approved'
+                    ? '<span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full">Approved</span>'
+                    : '<span class="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full">Pending</span>';
+
+                const actions = b.status === 'Pending' ? `
+                    <div class="flex items-center justify-center gap-2">
+                        <button onclick="approveBooking('${b.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow">Approve</button>
+                        <button onclick="rejectBooking('${b.id}')" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow">Reject</button>
+                    </div>
+                ` : `<span class="text-xs text-gray-400 font-semibold">No actions needed</span>`;
+
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition';
+                row.innerHTML = `
+                    <td class="py-4 px-4 font-mono font-bold text-pupMaroon">${b.id}</td>
+                    <td class="py-4 px-4 font-medium text-gray-900">${b.requester}</td>
+                    <td class="py-4 px-4 font-bold text-pupMaroon">${b.roomName}</td>
+                    <td class="py-4 px-4 text-xs text-gray-600"><span class="font-bold">${b.date}</span><br>${b.time}</td>
+                    <td class="py-4 px-4 text-gray-600">${b.purpose}</td>
+                    <td class="py-4 px-4">${statusBadge}</td>
+                    <td class="py-4 px-4 text-center">${actions}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            document.getElementById('admin-pending-count').innerText = pendingCount;
+            document.getElementById('admin-approved-count').innerText = approvedCount;
+        }
+
+        function approveBooking(id) {
+            const booking = reservations.find(b => b.id === id);
+            if (booking) {
+                booking.status = 'Approved';
+                renderAdminTable();
+                renderBookings();
+                showToast(`Reservation ${id} has been Approved.`, 'success');
+            }
+        }
+
+        function rejectBooking(id) {
+            reservations = reservations.filter(b => b.id !== id);
+            renderAdminTable();
+            renderBookings();
+            updateBadgeCount();
+            showToast(`Reservation ${id} was rejected.`, 'info');
+        }
+
+        // Live Chat Support Widget Logic
+        function toggleChatWindow() {
+            const win = document.getElementById('chat-window');
+            win.classList.toggle('hidden');
+        }
+
+        function sendChatMessage() {
+    const input = document.getElementById('chat-input');
+    const text = input.value.trim();
+    if (!text) return;
+
+    const chatBody = document.getElementById('chat-messages');
+    const msgDiv = document.createElement('div');
+    
+    if (isAdminLoggedIn) {
+        // --- ADMIN REPLIED ---
+        // As admin, your reply should appear on the LEFT (incoming support side) 
+        // so it simulates receiving or viewing the message correctly in the chat thread.
+        msgDiv.className = 'flex items-start gap-2 justify-start';
+        msgDiv.innerHTML = `
+            <div class="w-8 h-8 rounded-full bg-pupGold text-pupMaroon flex items-center justify-center font-bold text-xs flex-shrink-0">AD</div>
+            <div class="bg-pupDarkMaroon text-white p-3 rounded-2xl shadow-sm max-w-[80%] text-xs border border-pupGold/30">
+                <span class="block text-[10px] text-pupGold font-bold uppercase">Admin Reply</span>
+                ${text}
+            </div>
+        `;
+        chatBody.appendChild(msgDiv);
+        input.value = '';
+        chatBody.scrollTop = chatBody.scrollHeight;
+        showToast('Admin reply logged in chat thread.', 'success');
+    } else {
+        // --- STUDENT SENT A MESSAGE ---
+        // Student messages appear on the RIGHT from the student's view.
+        msgDiv.className = 'flex items-start gap-2 justify-end';
+        msgDiv.innerHTML = `
+            <div class="bg-pupMaroon text-white p-3 rounded-2xl shadow-sm max-w-[80%] text-xs">${text}</div>
+            <div class="w-8 h-8 rounded-full bg-pupGold text-pupMaroon flex items-center justify-center font-bold text-xs flex-shrink-0">JS</div>
+        `;
+        chatBody.appendChild(msgDiv);
+        input.value = '';
+        chatBody.scrollTop = chatBody.scrollHeight;
+
+        // Automated bot acknowledgment if admin isn't active
+        setTimeout(() => {
+            if (!isAdminLoggedIn) {
+                const autoReply = document.createElement('div');
+                autoReply.className = 'flex items-start gap-2 justify-start';
+                autoReply.innerHTML = `
+                    <div class="w-8 h-8 rounded-full bg-pupMaroon text-pupGold flex items-center justify-center font-bold text-xs flex-shrink-0">AD</div>
+                    <div class="bg-white p-3 rounded-2xl shadow-sm border border-gray-100 max-w-[80%] text-gray-700 text-xs">
+                        Message received! Our admin team will review your inquiry and respond as soon as possible. Thank you for reaching out to PUP Santa Rosa IT Support.
+                    </div>
+                `;
+                chatBody.appendChild(autoReply);
+                chatBody.scrollTop = chatBody.scrollHeight;
+            }
+        }, 1000);
+    }
+}
+
+        function handleChatKey(e) {
+            if (e.key === 'Enter') sendChatMessage();
+        }
+
+        function toggleMobileMenu() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        }
+
+        // Initialize on load
+       window.onload = function() {
+    const savedUser = localStorage.getItem('pup_current_user');
+    if (savedUser) {
+        currentUser = JSON.parse(savedUser);
+    } else {
+        currentUser = null;
+    }
+    updateAuthUI();
+    renderRooms();
+    renderBookings();
+    updateBadgeCount();
+};
+
+// Change this at the top of your script:
+let currentUser = JSON.parse(localStorage.getItem('pup_current_user')) || null;
+
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.add('hidden');
+}
+
+function openModal(modalId) {
+    document.getElementById(modalId).classList.remove('hidden');
+}
+
+function switchToSignup() {
+    closeModal('student-login-modal');
+    openModal('signup-modal');
+}
+
+// Handle Student Registration (Name, Section, Password)
+function handleStudentSignup(e) {
+    e.preventDefault();
+    const name = document.getElementById('signup-name').value.trim();
+    const section = document.getElementById('signup-section').value.trim();
+    const pass = document.getElementById('signup-pass').value;
+
+    let users = JSON.parse(localStorage.getItem('pup_students') || '[]');
+    if(users.some(u => u.name.toLowerCase() === name.toLowerCase())) {
+        showToast('Account with this name already exists. Please log in.', 'error');
+        return;
+    }
+
+    users.push({ name, section, pass });
+    localStorage.setItem('pup_students', JSON.stringify(users));
+
+    showToast('Account created successfully! Please log in.', 'success');
+    closeModal('signup-modal');
+    openModal('student-login-modal');
+}
+
+// Handle Student Login (Name & Password)
+function handleStudentLogin(e) {
+    e.preventDefault();
+    const name = document.getElementById('login-name').value.trim();
+    const pass = document.getElementById('login-pass').value;
+
+    let users = JSON.parse(localStorage.getItem('pup_students') || '[]');
+    let found = users.find(u => u.name.toLowerCase() === name.toLowerCase() && u.pass === pass);
+
+    // Fallback default student if none registered yet
+    if (!found && name.toLowerCase() === 'juan dela cruz' && pass === 'password') {
+        found = { name: "Juan dela Cruz", section: "BSIT 3-1" };
+    }
+
+    if (found) {
+        currentUser = { name: found.name, section: found.section || 'BSIT 3-1', role: 'student' };
+        localStorage.setItem('pup_current_user', JSON.stringify(currentUser));
+        
+        updateAuthUI();
+        closeModal('student-login-modal');
+        showToast(`Welcome back, ${currentUser.name}!`, 'success');
+    } else {
+        showToast('Invalid name or password.', 'error');
+    }
+}
+
+// Logout Student
+
+function logoutStudent() {
+
+    // Clear saved login
+    localStorage.removeItem('pup_current_user');
+
+    // Reset current user
+    currentUser = null;
+
+    // Update login interface
+    updateAuthUI();
+
+    // Return to Browse Rooms
+    switchTab('rooms');
+
+    // Notify user
+    showToast('Juan successfully logged out!', 'success');
+
+}
+
+// Update UI State based on Login
+
+function updateAuthUI() {
+    const guestBtns = document.getElementById('guest-buttons');
+    const userPill = document.getElementById('user-pill');
+
+    if (currentUser) {
+        guestBtns.classList.add('hidden');
+        userPill.classList.remove('hidden');
+        userPill.classList.add('flex');
+
+        document.getElementById('user-display-name').innerText = currentUser.name;
+        document.getElementById('user-role-label').innerText =
+            currentUser.section + ' (Student)';
+
+        const initials = currentUser.name
+            .split(' ')
+            .map(n => n[0])
+            .join('')
+            .substring(0, 2)
+            .toUpperCase();
+
+        document.getElementById('user-initials').innerText = initials;
+
+    } else {
+        guestBtns.classList.remove('hidden');
+        userPill.classList.add('hidden');
+        userPill.classList.remove('flex');
+    }
+}
+
+function formatTime(time) {
+    const [hours, minutes] = time.split(':').map(Number);
+    const suffix = hours >= 12 ? 'PM' : 'AM';
+    const displayHour = hours % 12 || 12;
+
+    return `${String(displayHour).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${suffix}`;
+}
+
+    </script>
+</body>
+</html>
